@@ -22,9 +22,15 @@ class LinksController < ApplicationController
 
   # POST /links or /links.json
   def create
+    if !valid_url?(link_params["url"])
+      flash[:alert] = "Niepoprawny URL, przekierowano na stronę główną."
+      redirect_to root_path and return
+    end
+
     @link = Link.new(link_params)
     @link.user = current_user if user_signed_in?
     @link.user_id = current_user ? current_user.id : 1
+
 
     respond_to do |format|
       if @link.save
@@ -79,5 +85,10 @@ class LinksController < ApplicationController
     # Only allow a list of trusted parameters through.
     def link_params
       params.require(:link).permit(:url, :url_short, :category)
+    end
+
+    def valid_url?(url)
+      url_pattern = /\A#{URI::DEFAULT_PARSER.make_regexp}\z/
+      url =~ url_pattern
     end
 end
